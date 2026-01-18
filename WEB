@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apollo Style LMS - Hệ Thống Học Tập Thông Minh</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .role-section { display: none; }
+        .role-section.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body class="bg-blue-50">
+
+<nav class="bg-white shadow-lg p-4 flex justify-center gap-4 sticky top-0 z-50">
+    <button onclick="switchRole('admin')" class="bg-slate-700 text-white px-5 py-2 rounded-full font-bold hover:scale-105 transition"><i class="fas fa-user-shield mr-2"></i>Nhân Viên</button>
+    <button onclick="switchRole('student')" class="bg-green-500 text-white px-5 py-2 rounded-full font-bold hover:scale-105 transition"><i class="fas fa-child mr-2"></i>Học Sinh</button>
+    <button onclick="switchRole('teacher')" class="bg-orange-500 text-white px-5 py-2 rounded-full font-bold hover:scale-105 transition"><i class="fas fa-chalkboard-teacher mr-2"></i>Giáo Viên</button>
+</nav>
+
+<div class="max-w-6xl mx-auto p-4 md:p-8">
+
+    <section id="admin" class="role-section active">
+        <div class="bg-white rounded-3xl p-8 shadow-xl border-b-8 border-slate-700">
+            <h2 class="text-3xl font-black text-slate-700 mb-6 uppercase"><i class="fas fa-database mr-3"></i>Quản Lý Học Viên</h2>
+            <div class="bg-slate-50 p-6 rounded-2xl grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div>
+                    <label class="block font-bold mb-1">Tên học sinh:</label>
+                    <input type="text" id="adm-name" placeholder="Nhập tên..." class="w-full p-3 rounded-xl border-2 border-slate-200">
+                </div>
+                <div>
+                    <label class="block font-bold mb-1">Nạp số buổi học:</label>
+                    <input type="number" id="adm-sessions" placeholder="Ví dụ: 24" class="w-full p-3 rounded-xl border-2 border-slate-200">
+                </div>
+                <div class="flex items-end">
+                    <button onclick="adminAction()" class="w-full bg-slate-700 text-white p-3 rounded-xl font-bold hover:bg-slate-800">CẬP NHẬT TÀI KHOẢN</button>
+                </div>
+            </div>
+            <div class="mt-4 overflow-hidden rounded-xl border border-slate-200">
+                <table class="w-full text-left bg-white">
+                    <thead class="bg-slate-100"><tr><th class="p-4">Học Viên</th><th class="p-4">Số Buổi Nạp</th><th class="p-4">Thời gian</th></tr></thead>
+                    <tbody id="admin-history"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="student" class="role-section">
+        <div class="bg-white rounded-3xl p-8 shadow-xl border-b-8 border-green-500">
+            <div class="flex flex-wrap justify-between items-center mb-8 gap-4">
+                <div>
+                    <h2 class="text-4xl font-black text-green-600">Chào con, <span id="st-display-name">Học Viên</span>! 🌟</h2>
+                    <p class="text-gray-500 font-medium">Hôm nay con muốn học lúc mấy giờ nhỉ?</p>
+                </div>
+                <div class="bg-green-100 px-8 py-4 rounded-3xl text-center border-2 border-green-200">
+                    <span class="block text-sm font-bold text-green-600 uppercase">Số buổi còn lại</span>
+                    <span id="st-balance" class="text-4xl font-black text-green-700">0</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-yellow-50 p-6 rounded-3xl border-2 border-dashed border-yellow-300">
+                    <h3 class="text-xl font-bold mb-4 text-yellow-700"><i class="fas fa-calendar-plus mr-2"></i>Đặt lịch học mới</h3>
+                    <div class="space-y-4">
+                        <input type="date" id="st-date" class="w-full p-4 rounded-2xl border-2 border-white shadow-sm">
+                        <select id="st-time" class="w-full p-4 rounded-2xl border-2 border-white shadow-sm">
+                            <option>Ca 1: 08:00 - 09:30</option>
+                            <option>Ca 2: 15:00 - 16:30</option>
+                            <option>Ca 3: 19:00 - 20:30</option>
+                        </select>
+                        <button onclick="studentBook()" class="w-full bg-green-500 text-white p-4 rounded-2xl font-black text-lg hover:bg-green-600 shadow-lg">XÁC NHẬN ĐẶT LỊCH (-1 BUỔI)</button>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <h3 class="text-xl font-bold text-gray-700">Lớp học sắp tới của con</h3>
+                    <div id="st-upcoming" class="space-y-3">
+                        <p class="text-gray-400 italic">Con chưa có lịch học nào...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="teacher" class="role-section">
+        <div class="bg-white rounded-3xl p-8 shadow-xl border-b-8 border-orange-500">
+            <h2 class="text-3xl font-black text-orange-600 mb-6"><i class="fas fa-clipboard-list mr-3"></i>Lịch Dạy & Danh Sách Học Viên</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-orange-50 text-orange-700">
+                            <th class="p-4">Học Sinh</th>
+                            <th class="p-4">Ngày</th>
+                            <th class="p-4">Ca Học</th>
+                            <th class="p-4 text-center">Phòng Học</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teacher-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<script>
+    // Dữ liệu tập trung
+    let db = {
+        student: { name: "", sessions: 0 },
+        bookings: []
+    };
+
+    function switchRole(role) {
+        document.querySelectorAll('.role-section').forEach(s => s.classList.remove('active'));
+        document.getElementById(role).classList.add('active');
+        if(role === 'student') updateStudentUI();
+        if(role === 'teacher') updateTeacherUI();
+    }
+
+    // LOGIC NHÂN VIÊN
+    function adminAction() {
+        const name = document.getElementById('adm-name').value;
+        const sessions = parseInt(document.getElementById('adm-sessions').value);
+        if(!name || isNaN(sessions)) return alert("Vui lòng nhập đầy đủ!");
+
+        db.student.name = name;
+        db.student.sessions += sessions;
+        
+        const row = `<tr><td class="p-4 font-bold">${name}</td><td class="p-4 text-green-600 font-bold">+${sessions} buổi</td><td class="p-4 text-gray-400 text-sm">${new Date().toLocaleString()}</td></tr>`;
+        document.getElementById('admin-history').innerHTML += row;
+        alert(`Đã nạp thành công buổi học cho ${name}!`);
+    }
+
+    // LOGIC HỌC SINH
+    function updateStudentUI() {
+        document.getElementById('st-display-name').innerText = db.student.name || "Học Viên";
+        document.getElementById('st-balance').innerText = db.student.sessions;
+        
+        const list = document.getElementById('st-upcoming');
+        list.innerHTML = db.bookings.filter(b => b.name === db.student.name).map(b => `
+            <div class="bg-white border-2 border-green-100 p-4 rounded-2xl flex justify-between items-center shadow-sm">
+                <div><p class="font-bold text-green-700">${b.date}</p><p class="text-sm text-gray-500">${b.time}</p></div>
+                <a href="${b.link}" target="_blank" class="bg-blue-500 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-blue-600"><i class="fas fa-video mr-2"></i>VÀO HỌC</a>
+            </div>
+        `).join('') || '<p class="text-gray-400 italic">Con chưa có lịch học nào...</p>';
+    }
+
+    function studentBook() {
+        const date = document.getElementById('st-date').value;
+        const time = document.getElementById('st-time').value;
+
+        if(!db.student.name) return alert("Học sinh chưa tồn tại!");
+        if(db.student.sessions <= 0) return alert("Hết buổi học rồi! Nhờ bố mẹ nạp thêm nhé.");
+        if(!date) return alert("Con hãy chọn ngày học nhé!");
+
+        db.student.sessions -= 1;
+        db.bookings.push({ name: db.student.name, date, time, link: "https://meet.google.com/your-code" });
+        
+        updateStudentUI();
+        alert("Chúc mừng con! Đặt lịch thành công.");
+    }
+
+    // LOGIC GIÁO VIÊN
+    function updateTeacherUI() {
+        const tbody = document.getElementById('teacher-list');
+        tbody.innerHTML = db.bookings.map(b => `
+            <tr class="border-b border-gray-100">
+                <td class="p-4 font-bold">${b.name}</td>
+                <td class="p-4">${b.date}</td>
+                <td class="p-4 font-medium text-gray-600">${b.time}</td>
+                <td class="p-4 text-center"><a href="${b.link}" target="_blank" class="inline-block bg-orange-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-orange-600"><i class="fas fa-sign-in-alt mr-2"></i>VÀO DẠY</a></td>
+            </tr>
+        `).join('') || '<tr><td colspan="4" class="p-8 text-center text-gray-400">Chưa có lớp dạy nào...</td></tr>';
+    }
+</script>
+</body>
+</html>
